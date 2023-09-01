@@ -1,0 +1,4 @@
+some replace content line1
+some replace content line2
+some replace content line3
+some replace content line4

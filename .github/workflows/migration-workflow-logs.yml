@@ -1,0 +1,25 @@
+name: WorkFlow Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  access_workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get Workflow Runs details
+        run: |
+          response=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${{ secrets.issue_ops_token }}" "https://api.github.com/repos/${{ vars.ISSUE_OPS_SERVER }}/actions/runs?event=issue_comment")
+          # echo "$response"
+          for ((i=0; i<$(echo "$response" | jq '.workflow_runs | length'); i++)); do
+            display_title=$(echo "$response" | jq -r ".workflow_runs[$i].display_title")
+            html_url=$(echo "$response" | jq -r ".workflow_runs[$i].html_url")
+            status=$(echo "$response" | jq -r ".workflow_runs[$i].status")
+            conclusion=$(echo "$response" | jq -r ".workflow_runs[$i].conclusion")
+            created_at=$(echo "$response" | jq -r ".workflow_runs[$i].created_at")
+            updated_at=$(echo "$response" | jq -r ".workflow_runs[$i].updated_at")
+            echo "$display_title, $html_url, $status, $conclusion, $created_at, $updated_at"
+          done

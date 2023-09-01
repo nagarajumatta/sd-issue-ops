@@ -1,0 +1,24 @@
+name: config-folders/stepsAndWrappers_config
+on:
+  workflow_dispatch:
+jobs:
+  foo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+#     # 'retry' was not transformed because there is no suitable equivalent in GitHub Actions
+
+#    Create a custom script with retries ref condition for not imported items as below  
+    - name: foo
+      timeout-minutes: 5
+      env:
+        RETRY_MAX: 5
+      run: |
+        for i in $(seq 1 $RETRY_MAX); do
+          echo "hello"
+          if [ $? -eq 0 ]; then
+            break
+          fi
+          sleep 1
+        done

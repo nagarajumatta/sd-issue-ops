@@ -1,0 +1,53 @@
+name: cleanup-migration
+# this workflow will close the current issueops action importer issue that is open for the migration. 
+# the issue id variable for the specific CI tool will be set to 'closed'.
+# is the selection is to cleanup this repo, then the variables that were created to support the migration will be removed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci-tool:
+        type: choice
+        description: CI/CD tool
+        options:
+          - Jenkins
+          - Gitlab
+          - CircleCI
+          - TravisCI
+      cleanup-target:
+        type: choice
+        description: Cleanup the issueops repo or this repo?
+        options:
+          - IssueOps Issue
+          - This repo
+jobs:
+#This is cleaning up for all iterations, even when the migration is not completed.
+#need to make thisa specific selection from the user
+  clean-up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: assign-jenkins-id
+        if: inputs.ci-tool == 'Jenkins'
+        run: echo "issue_id=${{ vars.JENKINS_ISSUE_ID }}" >> "$GITHUB_ENV"
+      - name: assign-gitlab-id
+        if: inputs.ci-tool == 'Gitlab'
+        run: echo "issue_id=${{ vars.GITLAB_ISSUE_ID }}" >> "$GITHUB_ENV"
+      - name: assign-circleci-id
+        if: inputs.ci-tool == 'CircleCI'
+        run: echo "issue_id=${{ vars.CIRCLECI_ISSUE_ID }}" >> "$GITHUB_ENV"
+      - name: assign-travisci-id
+        if: inputs.ci-tool == 'TravisCI'
+        run: echo "issue_id=${{ vars.TRAVISCI_ISSUE_ID }}" >> "$GITHUB_ENV"
+      - name: close-issue-in-issueops-repo
+        if: inputs.cleanup-target == 'IssueOps Issue'
+        run: |
+          curl -L -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ env.issue_id }} -d '{"state":"closed"}'
+      - name: cleanup-secrets-in-current-repo
+        #if: inputs.cleanup-target == 'This repo'
+        if: false
+        run: |
+          curl -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ github.repository }}/actions/secrets/${{ inputs.ci-tool }}_ACCESS_TOKEN
+      - name: cleanup-variables-in-current-repo
+        if: inputs.cleanup-target == 'This repo'
+        run: |
+          curl -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ github.repository }}/actions/variables/${{ inputs.ci-tool }}_ISSUE_ID

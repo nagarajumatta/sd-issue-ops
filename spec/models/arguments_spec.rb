@@ -11,17 +11,17 @@ RSpec.describe Arguments do
 
     context "when the command is found" do
       before do
-        expect(provider).to receive(:module).and_return(Jenkins).at_least(:once)
+        expect(provider).to receive(:module).and_return(::Jenkins).at_least(:once)
         expect(command).to receive(:classify).and_return("Audit").at_least(:once)
         expect(command).to receive(:options).and_return({})
       end
 
-      it { is_expected.to be_a(Jenkins::Audit) }
+      it { is_expected.to be_a(::Jenkins::Audit) }
     end
 
     context "when the command is not found" do
       before do
-        expect(provider).to receive(:module).and_return(Jenkins).at_least(:once)
+        expect(provider).to receive(:module).and_return(::Jenkins).at_least(:once)
         expect(command).to receive(:classify).and_return("Whoopsie").at_least(:once)
       end
 
@@ -35,10 +35,10 @@ RSpec.describe Arguments do
     let(:options) { {} }
 
     before do
-      expect(provider).to receive(:module).and_return(AzureDevops).at_least(:once)
+      expect(provider).to receive(:module).and_return(::AzureDevops).at_least(:once)
       expect(command).to receive(:classify).and_return("Audit").at_least(:once)
       expect(command).to receive(:options).and_return(options)
-      expect_any_instance_of(AzureDevops::Audit).to receive(:to_a).and_return(output)
+      expect_any_instance_of(::AzureDevops::Audit).to receive(:to_a).and_return(output)
     end
 
     context "when the output is nil" do
@@ -51,40 +51,35 @@ RSpec.describe Arguments do
     end
 
     context "when the output is not nil" do
-      let(:output) { [["--option", "value"]] }
+      let(:output) { ["--option", "value"] }
 
       it "writes an output variable" do
-        expect(arguments).to receive(:set_output).with("args", /--option \$variable_\d{4}/)
-        expect(arguments).to receive(:set_environment).with(/variable_\d{4}/, "value")
+        expect(arguments).to receive(:set_output).with("args", "--option value")
         subject
       end
     end
 
     context "when the output contains a space" do
-      let(:output) { [["--option", "some value"]] }
+      let(:output) { ["--option", "some value"] }
 
       it "writes an output variable" do
-        expect(arguments).to receive(:set_output).with("args", /--option \$variable_\d{4}/)
-        expect(arguments).to receive(:set_environment).with(/variable_\d{4}/, "\"some value\"")
+        expect(arguments).to receive(:set_output).with("args", "--option \"some value\"")
         subject
       end
     end
 
     context "when there is a custom transformers option" do
-      let(:output) { [["--option", "value"]] }
+      let(:output) { ["--option", "value"] }
       let(:options) { { "custom-transformers" => "transformers/**/*.rb" } }
 
       it "writes an output variable" do
-        expect(arguments).to receive(:set_output).with("args", /--option \$variable_\d{4} --custom-transformers \$variable_\d{4}/)
-        ["value", "transformers/**/*.rb"].each do |value|
-          expect(arguments).to receive(:set_environment).with(/variable_\d{4}/, value)
-        end
+        expect(arguments).to receive(:set_output).with("args", "--option value --custom-transformers transformers/**/*.rb")
         subject
       end
     end
 
     context "when there are custom transformers in the repository" do
-      let(:output) { [["--option", "value"]] }
+      let(:output) { ["--option", "value"] }
       let(:files) { ["transformers/jenkins/transformers.rb", "transformers/all.rb"] }
 
       before do
@@ -92,11 +87,7 @@ RSpec.describe Arguments do
       end
 
       it "writes an output variable" do
-        expect(arguments).to receive(:set_output).with("args", /--option \$variable_\d{4} --custom-transformers \$variable_\d{4} \$variable_\d{4}/)
-        ["value", *files].each do |value|
-          expect(arguments).to receive(:set_environment).with(/variable_\d{4}/, value)
-        end
-
+        expect(arguments).to receive(:set_output).with("args", "--option value --custom-transformers transformers/jenkins/transformers.rb transformers/all.rb")
         subject
       end
     end

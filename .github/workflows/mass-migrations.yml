@@ -1,0 +1,65 @@
+name: mass-migrations
+
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      name:
+        type: choice
+        description: import step
+        options:
+          - audit
+          - dry-run
+          - migration
+        
+jobs:
+  mass-migrations:
+    runs-on: ubuntu-latest
+    outputs:
+      issue-id: ${{ steps.get-issue-id.outputs.issue-id }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+      - name: Set environment variables and run python script
+        id: get-issue-id
+        run: |
+          # operation step name
+          export STEP_NAME=${{ inputs.name }}
+          
+          # Deatils of IssueOps Repo and PAT
+          export ISSUE_OPS_TOKEN=${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}
+          export ISSUE_OPS_REPO=${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}  
+          
+          # Getting the IssueId and PAT of the given input CI/CD tool
+          #if [ "${{ inputs.ci-tool }}" == "Jenkins" ]; then
+          export JENKINS_ISSUE_ID=${{ vars.JENKINS_ISSUE_ID }}
+          export JENKINS_ACCESS_TOKEN=${{ secrets.JENKINS_ACCESS_TOKEN }}
+          #elif [ "${{ inputs.ci-tool }}" == "Gitlab" ]; then
+          export GITLAB_ISSUE_ID=${{ vars.GITLAB_ISSUE_ID }}
+          export GITLAB_ACCESS_TOKEN=${{ secrets.GITLAB_ACCESS_TOKEN }}
+          #elif [ "${{ inputs.ci-tool }}" == "CircleCI" ]; then
+          export CIRCLECI_ISSUE_ID=${{ vars.CIRCLECI_ISSUE_ID }}
+          export CIRCLECI_ACCESS_TOKEN=${{ secrets.CIRCLECI_ACCESS_TOKEN }}
+          #elif [ "${{ inputs.ci-tool }}" == "TravisCI" ]; then
+          export TRAVISCI_ISSUE_ID=${{ vars.TRAVISCI_ISSUE_ID }}
+          export TRAVISCI_ACCESS_TOKEN=${{ secrets.TRAVISCI_ACCESS_TOKEN }}
+          #fi
+          pip install PyGithub==1.58.2 requests==2.30.0
+          python pipeline-migration/migration_script.py
+#This is cleaning up for all iterations, even when the migration is not completed.
+#need to make thisa specific selection from the user
+#  clean-up:
+#    needs: mass-migrations
+#    runs-on: ubuntu-latest
+#    steps:
+#      - id: close-issue-in-issueops-repo
+#        run: |
+#          curl -L -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_SERVER }}/issues/${{ needs.mass-migrations.outputs.issue-id }} -d '{"state":"closed"}'
+#      - id: cleanup-secrets-in-current-repo
+#        run: |
+#          curl -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ github.repository }}/actions/secrets/${{ inputs.ci-tool }}_ACCESS_TOKEN
+#      - id: cleanup-variables-in-current-repo
+#        run: |
+#          curl -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ github.repository }}/actions/variables/${{ inputs.ci-tool }}_ISSUE_ID

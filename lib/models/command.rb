@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "active_support/core_ext/string"
-require_relative "../concerns/environment_writer"
+require_relative "../concerns/output_writer"
 
 class Command
-  include EnvironmentWriter
+  include OutputWriter
 
   VALID_COMMANDS = %w[audit migrate dry-run].freeze
 

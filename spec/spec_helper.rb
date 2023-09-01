@@ -5,7 +5,7 @@ require "factory_bot"
 require "faker"
 require "fileutils"
 
-require_relative "../cli"
+require_relative "./../cli"
 
 Dir[File.join(__dir__, "support/**/*.rb")].sort.each { |f| require f }
 
@@ -29,7 +29,6 @@ RSpec.configure do |config|
     Dir.mkdir("tmp") unless Dir.exist?("tmp")
     FileUtils.touch "tmp/test.txt"
     ENV["GITHUB_OUTPUT"] = "tmp/test.txt"
-    ENV["GITHUB_ENV"] = "tmp/test.txt"
   end
 
   config.after(:suite) do

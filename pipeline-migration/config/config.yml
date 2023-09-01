@@ -1,0 +1,27 @@
+Jenkins:
+  - source_urls:
+      - http://20.51.238.66:8080/job/config-folders/job/legacyMetaStepSyntax_config/
+      - http://20.51.238.66:8080/job/config-folders/job/postConditionOrder_config/
+    target_repos:
+      - https://github.com/customer-sandbox/target-gh-actions/
+      - https://github.com/customer-sandbox/target-gh-actions/
+    
+Gitlab:
+  - source_urls:
+      - database-schema-migration-and-testing,jenkins-pipeline-examples
+      - custom-deploy-branch,jenkins-pipeline-examples
+    target_repos:
+      - https://github.com/im-sandbox-suryaraghava80/gitlab-surya
+      - https://github.com/im-sandbox-suryaraghava80/gitlab-surya
+
+CircleCI:
+  - source_urls:
+      - test
+    target_repos:
+      - https://github.com/organization1/target_repo1
+
+TravisCI:
+  - source_urls:
+      - test
+    target_repos:
+      - https://github.com/organization1/target_repo2

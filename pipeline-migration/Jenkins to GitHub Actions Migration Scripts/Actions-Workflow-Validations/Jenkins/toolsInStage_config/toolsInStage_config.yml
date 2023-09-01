@@ -1,0 +1,19 @@
+name: config-folders/toolsInStage_config
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      
+    - name: Build with Maven
+      uses: maven/setup-maven@v1
+      with:
+        maven-version: '3.0.1'
+
+    - name: Print Hello
+      run: echo "hello"

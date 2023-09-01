@@ -1,0 +1,41 @@
+name: config-folders/postConditionOrder_config
+on:
+  workflow_dispatch:
+jobs:
+  foo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo hello
+  Post-Build:
+    if: always()
+    name: Post Build
+    runs-on: ubuntu-latest
+    needs:
+    - foo
+    steps:
+    - name: snapshot post build workflow status
+      run: |-
+        echo "aborted=${{ contains(needs.*.result,'cancelled') }}" >> $GITHUB_OUTPUT
+        echo "success=${{ contains(needs.*.result,'success') && !contains(needs.*.result,'cancelled') && !contains(needs.*.result,'failure') }}" >> $GITHUB_OUTPUT
+        echo "unstable=${{ contains(needs.*.result,'failure') && !contains(needs.*.result,'cancelled') }}" >> $GITHUB_OUTPUT
+        echo "failure=${{ contains(needs.*.result,'failure') && !contains(needs.*.result,'cancelled') }}" >> $GITHUB_OUTPUT
+      id: __post_build
+    - name: echo message
+      run: echo SUCCESS, FAILURE, UNSTABLE, or ABORTED runs last
+      if: steps.__post_build.outputs.unstable == 'true'
+    - name: echo message
+      run: echo SUCCESS, FAILURE, UNSTABLE, or ABORTED runs last
+      if: steps.__post_build.outputs.failure == 'true'
+    - name: echo message
+      run: echo SUCCESS, FAILURE, UNSTABLE, or ABORTED are exclusive of each other
+      if: steps.__post_build.outputs.aborted == 'true'
+    - name: echo message
+      run: echo SUCCESS, FAILURE, UNSTABLE, or ABORTED runs last
+      if: steps.__post_build.outputs.success == 'true'
+    - name: echo message
+      run: echo I AM ALWAYS first
+      if: always()
+#     # post condition changed not supported

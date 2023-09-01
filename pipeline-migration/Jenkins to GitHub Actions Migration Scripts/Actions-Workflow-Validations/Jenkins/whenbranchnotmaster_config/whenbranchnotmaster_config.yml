@@ -1,0 +1,26 @@
+name: config-folders/whenBranchNotMaster_config
+on:
+  workflow_dispatch:
+jobs:
+  Hello:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo Hello
+  Branch_Test:
+   # if:
+#       # Unsupported condition(s) [not]
+    name: Branch Test
+    runs-on: ubuntu-latest
+    needs: Hello
+# Create a custom git ref condition for not imported items as below    
+    if: github.ref != 'refs/heads/master'    
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo World
+    - name: echo message
+      run: echo Heal it

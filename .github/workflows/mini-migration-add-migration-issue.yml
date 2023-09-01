@@ -1,0 +1,82 @@
+name: mini-migration-add-migration-issue
+
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      ci-tool:
+        type: choice
+        description: CI/CD tool to use
+        options:
+          - Jenkins
+          - Gitlab
+          - CircleCI
+          - TravisCI
+
+jobs:
+  add-jenkins-issueops:
+    if: inputs.ci-tool == 'Jenkins'
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-jenkins-issueops
+        run: |
+          curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_SERVER }}/issues -d '{"title":"Jenkins Pipeline Importer for Repo ${{ github.repository }}","labels":["jenkins"]}' > issue.json
+          internal_issue_id=$(jq '.number' issue.json)
+          echo "internal_issue_id=$internal_issue_id" >> "$GITHUB_OUTPUT"
+          echo "Curl response: $internal_issue_id"
+      - name: Set Repository Variable
+        uses: action-pack/set-variable@v1
+        with:
+          name: ${{ inputs.ci-tool }}_ISSUE_ID
+          value: ${{ steps.create-jenkins-issueops.outputs.internal_issue_id  }}
+          token: ${{ secrets.ISSUE_OPS_TOKEN }}
+
+  add-gitlab-issueops:
+    if: inputs.ci-tool == 'Gitlab'
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-gitlab-issueops
+        run: |
+          curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_SERVER }}/issues -d '{"title":"Gitlab Pipeline Importer for Repo ${{ github.repository }}","labels":["gitlab"]}' > issue.json
+          echo "internal_issue_id=$(jq '.number' issue.json)" >> "$GITHUB_OUTPUT"
+          echo "Curl response: $internal_issue_id"
+      - name: Set Repository Variable
+        uses: action-pack/set-variable@v1
+        with:
+          name: ${{ inputs.ci-tool }}_ISSUE_ID
+          value: ${{ steps.create-gitlab-issueops.outputs.internal_issue_id  }}
+          token: ${{ secrets.ISSUE_OPS_TOKEN }}
+
+  add-circleci-issueops:
+    if: inputs.ci-tool == 'CircleCI'
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-circleci-issueops
+        run: |
+          curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_SERVER }}/issues -d '{"title":"CircleCi Pipeline Importer for Repo ${{ github.repository }}","labels":["circleci"]}' > issue.json
+          echo "internal_issue_id=$(jq '.number' issue.json)" >> "$GITHUB_OUTPUT"
+          echo "Curl response: $internal_issue_id"
+      - name: Set Repository Variable
+        uses: action-pack/set-variable@v1
+        with:
+          name: ${{ inputs.ci-tool }}_ISSUE_ID
+          value: ${{ steps.create-circleci-issueops.outputs.internal_issue_id  }}
+          token: ${{ secrets.ISSUE_OPS_TOKEN }}
+
+  add-travisci-issueops:
+    if: inputs.ci-tool == 'TravisCI'
+    runs-on: ubuntu-latest
+    steps:
+      - id: create-travisci-issueops
+        run: |
+          curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_SERVER }}/issues -d '{"title":"TravisCi Pipeline Importer for Repo ${{ github.repository }}","labels":["travisci"]}' > issue.json
+          echo "internal_issue_id=$(jq '.number' issue.json)" >> "$GITHUB_OUTPUT"
+          echo "Curl response: $internal_issue_id"
+      - name: Set Repository Variable
+        uses: action-pack/set-variable@v1
+        with:
+          name: ${{ inputs.ci-tool }}_ISSUE_ID
+          value: ${{ steps.create-travisci-issueops.outputs.internal_issue_id  }}
+          token: ${{ secrets.ISSUE_OPS_TOKEN }}
+
+  

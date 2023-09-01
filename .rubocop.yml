@@ -1,12 +1,7 @@
-require:
-  - rubocop-performance
-
 inherit_gem:
   rubocop-github:
-    - config/default.yml
+    - config/default_edge.yml
 
-AllCops:
-  NewCops: enable
 Lint/AmbiguousBlockAssociation:
   Exclude:
     - "spec/**/*"

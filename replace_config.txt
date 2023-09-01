@@ -1,0 +1,5 @@
+search_pattern1,replace_pattern1
+search_pattern2,replace_pattern2
+search_pattern3,replace_pattern3
+search_pattern4,replace_pattern4
+search_pattern5,replace_pattern5

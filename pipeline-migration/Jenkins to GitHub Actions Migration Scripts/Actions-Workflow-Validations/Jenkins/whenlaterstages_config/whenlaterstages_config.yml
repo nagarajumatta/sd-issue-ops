@@ -1,0 +1,31 @@
+name: config-folders/whenLaterStages_config
+on:
+  workflow_dispatch:
+jobs:
+  One:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo Hello
+  Two:
+#    if:
+#       # Unsupported condition(s) [expression]
+    runs-on: ubuntu-latest
+    needs: one
+# create the below Custom Condition that was not imported from jenkins    
+    if: ${{ always() }}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo World
+  Three:
+    runs-on: ubuntu-latest
+    needs: Two
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo Other World

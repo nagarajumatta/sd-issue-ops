@@ -1,0 +1,21 @@
+name: config-folders/propertiesOptionsandTriggers_config
+on:
+  schedule:
+  - cron: 47 8 * * *
+  workflow_dispatch:
+    inputs:
+      SOME_STRING:
+        required: false
+        description: ''
+        default: ''
+jobs:
+  foo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo hello
+    - name: sh
+      shell: bash
+      run: test -f Jenkinsfile

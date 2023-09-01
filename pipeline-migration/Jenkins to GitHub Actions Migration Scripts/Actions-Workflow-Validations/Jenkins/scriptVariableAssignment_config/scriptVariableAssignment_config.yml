@@ -1,0 +1,40 @@
+name: config-folders/scriptVariableAssignment_config
+on:
+  workflow_dispatch:
+jobs:
+  foo:
+    #runs-on: # Agent label was not converted because 'or' conditional labels are not supported in GitHub actions
+#              some-label || docker
+    runs-on: ubuntu # or any other agent label you want to use
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             foo = docker.image('ubuntu')
+#                       env.bar = "${foo.imageName()}"
+#                       echo "foo: ${foo.imageName()}"
+#  Create a custom script with environment setup for not imported items as below  
+      - name: set up environment
+        run: |
+          foo=$(docker image ls --format "{{.Repository}}:{{.Tag}}" ubuntu)
+          echo "::set-env name=bar::$foo"
+          echo "foo: $foo"
+  bar:
+    #runs-on: # Agent label was not converted because 'or' conditional labels are not supported in GitHub actions
+#              some-label || docker
+    runs-on: ubuntu # or any other agent label you want to use
+    needs: foo
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: 'echo "bar: ${{ env.bar }}"'
+    - name: echo message
+      run: 'echo "foo: ${foo.imageName()}"'
+  

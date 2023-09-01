@@ -1,0 +1,22 @@
+# Unable to parse Jenkins pipeline. Scripted pipelines are not currently supported.
+ #                     Pipeline type: flow-definition
+
+#Error: Process completed with exit code 1.
+
+name: config-folders/timestamperWrapper_config
+on:
+  workflow_dispatch:
+
+jobs:
+  timestamp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: First echo
+        run: echo "Hey, look, I'm echoing with a timestamp!"
+
+      - name: Sleeping
+        run: sleep 30
+
+      - name: Second echo
+        run: echo "Wonder what time it is now?"

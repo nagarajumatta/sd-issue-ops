@@ -1,0 +1,81 @@
+{
+  "migration": [
+    {
+      "target_url": "https://github.com/customer-sandbox/target-gh-actions",
+      "jenkins_instance_url": "http://20.51.238.66:8080/",
+      "jenkins_username": "byron",
+      "gitlab_instance_url": "https://gitlab.gh-services-partners.com",
+      "sources": [
+        {
+          "type": "jenkins",
+          "source_url": "http://20.51.238.66:8080/job/config-folders/job/environmentNonLiteral_config/"
+        },
+        {
+          "type": "jenkins",
+          "source_url": "http://20.51.238.66:8080/job/config-folders/job/environmentInStage_config/"
+        }
+      ]
+    },
+    {
+      "target_url": "https://github.com/customer-sandbox/target-gh-actions",
+      "jenkins_instance_url": "http://20.51.238.66:8080/",
+      "jenkins_username": "byron",
+      "gitlab_instance_url": "https://gitlab.gh-services-partners.com",
+      "sources": [
+        {
+          "type": "gitlab",
+          "source_url": "dynamic-build,jenkins-pipeline-examples"
+        },
+        {
+          "type": "gitlab",
+          "source_url": "java-application-vm,jenkins-pipeline-examples"
+        }
+      ]
+    }
+  ],
+  "audit": [
+    {
+      "jenkins_instance_url": "http://20.51.238.66:8080/",
+      "jenkins_username": "byron",
+      "gitlab_instance_url": "https://gitlab.gh-services-partners.com",
+      "sources": [
+        {
+          "type": "jenkins"
+        },
+        {
+          "type": "gitlab",
+          "source_url": "dynamic-build,jenkins-pipeline-examples"
+        },
+        {
+          "type": "gitlab",
+          "source_url": "java-application-vm,jenkins-pipeline-examples"
+        }
+      ]
+    }
+  ],
+  "dry-run": [
+    {
+      "jenkins_instance_url": "http://20.51.238.66:8080/",
+      "jenkins_username": "byron",
+      "gitlab_instance_url": "https://gitlab.gh-services-partners.com",
+      "sources": [
+        {
+          "type": "jenkins",
+          "source_url": "http://20.51.238.66:8080/job/config-folders/job/environmentNonLiteral_config/"
+        },
+        {
+          "type": "jenkins",
+          "source_url": "http://20.51.238.66:8080/job/config-folders/job/environmentInStage_config/"
+        },
+        {
+          "type": "gitlab",
+          "source_url": "dynamic-build,jenkins-pipeline-examples"
+        },
+        {
+          "type": "gitlab",
+          "source_url": "java-application-vm,jenkins-pipeline-examples"
+        }
+      ]
+    }
+  ]
+}

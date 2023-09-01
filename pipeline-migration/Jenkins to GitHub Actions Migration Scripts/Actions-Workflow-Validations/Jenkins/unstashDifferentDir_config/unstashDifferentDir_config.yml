@@ -1,0 +1,46 @@
+#Extracting pipeline                                                             
+                                                                                
+#[2023-05-04 16:55:29] Logs: 'output/log/valet-20230504-165529.log'
+#Extracting pipeline                                                             
+#[2023-05-04 16:55:30] Unable to parse Jenkins pipeline. Scripted pipelines are not currently supported.
+ #                     Pipeline type: flow-definition
+
+#Error: Process completed with exit code 1.
+
+name: My Workflow
+
+on: [push]
+
+jobs:
+  my_job:
+    runs-on: first-node
+
+    steps:
+      - name: Make output directory
+        run: mkdir -p output
+
+      - name: Write some text to file
+        run: echo "Hey look, some text." > output/somefile
+
+      - name: Stash output directory
+        uses: actions/stash@v2
+        with:
+          name: first-stash
+          include-path: output/*
+
+  second_step:
+    runs-on: second-node
+
+    steps:
+      - name: Create new directory
+        run: mkdir first-stash
+
+      - name: Unstash output directory
+        uses: actions/stash@v2
+        with:
+          name: first-stash
+
+      - name: Check output directory contents
+        run: |
+          cd first-stash
+          ls -la

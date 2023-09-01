@@ -7,15 +7,14 @@ require_rel "./jenkins/**/*.rb"
 require_rel "./travis_ci/**/*.rb"
 
 class Provider
-  include EnvironmentWriter
+  include OutputWriter
 
   PROVIDER_MAP = {
     "azure-devops" => ::AzureDevops,
     "circle-ci"    => ::CircleCI,
     "gitlab"       => ::GitlabCI,
     "jenkins"      => ::Jenkins,
-    "travis-ci"    => ::TravisCI,
-    "bamboo"       => ::Bamboo
+    "travis-ci"    => ::TravisCI
   }.freeze
 
   def initialize(labels)

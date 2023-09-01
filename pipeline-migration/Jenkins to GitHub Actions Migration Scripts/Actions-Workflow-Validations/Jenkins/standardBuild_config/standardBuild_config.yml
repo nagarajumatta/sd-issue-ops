@@ -1,0 +1,17 @@
+name: config-folders/standardBuild_config
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Build and Test
+      run: |
+        docker build -t myapp:${{ github.sha }} .
+        docker run myapp:${{ github.sha }} sh mainScript.sh
+        sh postScript.sh

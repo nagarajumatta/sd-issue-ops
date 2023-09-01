@@ -1,0 +1,23 @@
+name: config-folders/whenBranchMaster_config
+on:
+  workflow_dispatch:
+jobs:
+  One:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo Hello
+  Evaluate_Master:
+    if: github.ref == 'refs/heads/master'
+    name: Evaluate Master
+    runs-on: ubuntu-latest
+    needs: One
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo World
+    - name: echo message
+      run: echo Heal it

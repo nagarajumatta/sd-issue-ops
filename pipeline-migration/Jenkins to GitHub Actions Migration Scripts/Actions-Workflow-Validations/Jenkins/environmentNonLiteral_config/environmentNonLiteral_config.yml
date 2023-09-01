@@ -1,0 +1,42 @@
+name: config-folders/environmentNonLiteral_config
+on:
+  workflow_dispatch:
+#env:
+ # FOO: BAR
+#   # This item has no matching transformer
+#   BUILD_NUM_ENV: "${currentBuild.getNumber()}"
+#   # This item has no matching transformer
+#   ANOTHER_ENV: '"${currentBuild.getNumber()}"'
+ # INHERITED_ENV: "${{ env.BUILD_NUM_ENV }} is inherited"
+#   # This item has no matching transformer
+#   ACME_FUNC: "${readMavenPom().getArtifactId()}"
+
+# Write the environment variables manually as below
+env:
+  FOO: BAR
+  BUILD_NUM_ENV: ${{ github.run_number }}
+  ANOTHER_ENV: ${{ github.run_number }}
+  INHERITED_ENV: "${{ env.BUILD_NUM_ENV }} is inherited"
+  ACME_FUNC: ${{ steps.maven.outputs.artifact_id }}
+
+jobs:
+  Environment:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: sh
+      shell: bash
+      run: echo "FOO is $FOO"
+    - name: sh
+      shell: bash
+      run: echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"
+    - name: sh
+      shell: bash
+      run: echo "ANOTHER_ENV is $ANOTHER_ENV"
+    - name: sh
+      shell: bash
+      run: echo "INHERITED_ENV is $INHERITED_ENV"
+    - name: sh
+      shell: bash
+      run: echo "ACME_FUNC is $ACME_FUNC"

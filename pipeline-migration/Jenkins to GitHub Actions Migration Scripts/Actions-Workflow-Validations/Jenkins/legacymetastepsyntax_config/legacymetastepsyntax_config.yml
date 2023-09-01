@@ -1,0 +1,39 @@
+name: config-folders/legacyMetaStepSyntax_config
+on:
+  workflow_dispatch:
+jobs:
+  foo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+#     # This item has no matching transformer
+#     - writeFile:
+#       - key: text
+#         value:
+#           isLiteral: true
+#           value: hello world
+#       - key: file
+#         value:
+#           isLiteral: true
+#           value: msg.out
+#     # This item has no matching transformer
+#     - step:
+#       - key: delegate
+#         value:
+#           isLiteral: false
+#           value: "[$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true]"
+
+#   Create a custom transformer as below for not imported items as below 
+
+    - name: Write File
+      run: echo "hello world" > msg.out
+
+    - name: Archive File
+      uses: actions/upload-artifact@v2
+       with:
+        name: msg-out
+        path: msg.out
+    - name: sh
+      shell: bash
+      run: echo $PATH

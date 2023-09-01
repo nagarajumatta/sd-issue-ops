@@ -1,0 +1,21 @@
+name: config-folders/dockerfileDefault_config
+on:
+  workflow_dispatch:
+
+jobs:
+  my-job:
+    runs-on: ubuntu-latest
+
+    container:
+      image: my-docker-image:latest
+      options: -v /tmp:/tmp -p 8000:8000
+      build:
+        context: .
+        dockerfile: Dockerfile
+
+    steps:
+    - name: Cat hi-there
+      run: cat /hi-there
+
+    - name: Echo answer
+      run: echo "The answer is 42"

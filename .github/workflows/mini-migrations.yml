@@ -1,0 +1,136 @@
+name: mini-migrations
+
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      ci-tool:
+        type: choice
+        description: CI/CD tool to use
+        options:
+          - Jenkins
+          - Gitlab
+          - CircleCI
+          - TravisCI
+      name:
+        type: choice
+        description: import step
+        options:
+          - audit
+          - dry-run
+          - migrate
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  config-file-reader:
+    # This job is responsible for selecting the CI/CD tool and reading values from config
+    runs-on: ubuntu-latest
+    outputs:
+      source_urls: ${{ steps.read-config.outputs.source_urls }}
+      target_repos: ${{ steps.read-config.outputs.target_repos }}
+      issue_id: ${{ steps.read-config.outputs.issue_id }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    - name: Check config file
+      run: |
+        if [ -f pipeline-migration/config/config.yml ]; then
+          cat pipeline-migration/config/config.yml
+        else
+          echo "config.yml file not found"
+          exit 1
+        fi
+        
+    - name: Read config
+      id: read-config
+      run: |
+        cd pipeline-migration/config
+        source_urls=$(cat config.yml | yq -r '.${{ inputs.ci-tool }}[].source_urls[]' | tr '\n' ' ')
+        target_repos=$(cat config.yml | yq -r '.${{ inputs.ci-tool }}[].target_repos[]' | tr '\n' ' ')
+        if [ "${{ inputs.ci-tool }}" == "Jenkins" ]; then
+          issue_id=${{ vars.JENKINS_ISSUE_ID }}
+        elif [ "${{ inputs.ci-tool }}" == "Gitlab" ]; then
+          issue_id=${{ vars.GITLAB_ISSUE_ID }}
+        elif [ "${{ inputs.ci-tool }}" == "CircleCI" ]; then
+          issue_id=${{ vars.CIRCLECI_ISSUE_ID }}
+        elif [ "${{ inputs.ci-tool }}" == "TravisCI" ]; then
+          issue_id=${{ vars.TRAVISCI_ISSUE_ID }}
+        else
+          echo "Invalid CI/CD tool selected"
+          exit 1
+        fi
+        echo "::set-output name=source_urls::$source_urls"
+        echo "::set-output name=target_repos::$target_repos"
+        echo "::set-output name=issue_id::$issue_id"
+
+
+    - name: Print variables
+      run: |
+        echo "source_urls: ${{ steps.read-config.outputs.source_urls }}"
+        echo "target_repos: ${{ steps.read-config.outputs.target_repos }}"
+        echo "issue_id: ${{ steps.read-config.outputs.issue_id }}"
+
+  audit:
+    needs: config-file-reader
+    if: inputs.name == 'audit'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # runs a curl command to call the issue-ops repo
+    - name: do-audit
+      run: |
+        if [ "${{ inputs.ci-tool }}" = "Jenkins" ];then
+          curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ needs.config-file-reader.outputs.issue_id }}/comments -d '{"body":"/audit"}'
+        elif [ "${{ inputs.ci-tool }}" = "Gitlab" ];then
+          for source_url in ${{ needs.config-file-reader.outputs.source_urls }}; do
+            IFS=',' read -ra vars <<< "$source_url"
+            curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ needs.config-file-reader.outputs.issue_id }}/comments -d '{"body":"/audit --namespace '"${vars[1]}"'"}'
+          done
+        fi
+  dry-run:
+    needs: config-file-reader
+    if: inputs.name == 'dry-run'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Do Dry-Run
+      run: |
+        if [ "${{ inputs.ci-tool }}" = "Jenkins" ];then
+          for source_url in ${{ needs.config-file-reader.outputs.source_urls }}; do
+            echo "Executing dry-run command for source URL: $source_url"
+            curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28"  https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ needs.config-file-reader.outputs.issue_id }}/comments -d '{"body":"/dry-run --source-url '"$source_url"'"}'
+          done
+        elif [ "${{ inputs.ci-tool }}" = "Gitlab" ];then
+          for source_url in ${{ needs.config-file-reader.outputs.source_urls }}; do
+            echo "Executing dry-run command for source URL: $source_url"
+            IFS=',' read -ra vars <<< "$source_url"
+            curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28"  https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ needs.config-file-reader.outputs.issue_id }}/comments -d '{"body":"/dry-run --project '"${vars[0]}"' --namespace '"${vars[1]}"'"}'
+          done
+        fi
+        
+  migrate:
+    needs: config-file-reader
+    if: inputs.name == 'migrate'
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Do Migrate
+      run: |
+        source_urls=($(echo "${{ needs.config-file-reader.outputs.source_urls }}" | tr ' ' '\n'))
+        target_repos=($(echo "${{ needs.config-file-reader.outputs.target_repos }}" | tr ' ' '\n'))
+        if [ "${{ inputs.ci-tool }}" = "Jenkins" ];then
+          for ((i=0; i<${#source_urls[@]}; i++)); do
+            echo "Executing migrate command for source URL: ${source_urls[i]} into target repo: ${target_repos[i]}"
+            curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ needs.config-file-reader.outputs.issue_id }}/comments -d '{"body":"/migrate --source-url '"${source_urls[i]}"' --target-url '"${target_repos[i]}"'"}'
+          done
+        elif [ "${{ inputs.ci-tool }}" = "Gitlab" ];then
+          for ((i=0; i<${#source_urls[@]}; i++)); do
+            echo "Executing migrate command for source URL: ${source_urls[i]} into target repo: ${target_repos[i]}"
+            IFS=',' read -ra vars <<< "${source_urls[i]}"
+            curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.ISSUE_OPS_ACTION_IMPORTER_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${{ vars.ISSUE_OPS_ACTION_IMPORTER_REPO }}/issues/${{ needs.config-file-reader.outputs.issue_id }}/comments -d '{"body":"/migrate --project '"${vars[0]}"' --namespace '"${vars[1]}"' --target-url '"${target_repos[i]}"'"}'
+          done
+        fi

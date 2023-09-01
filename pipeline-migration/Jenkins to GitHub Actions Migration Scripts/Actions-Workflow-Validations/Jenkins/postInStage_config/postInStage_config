@@ -1,0 +1,71 @@
+name: config-folders/postInStage_config
+on:
+  workflow_dispatch:
+jobs:
+  Hello:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             String res = env.MAKE_RESULT
+#                       if (res != null) {
+#                         echo "Setting build result ${{ env.res }}"
+#                         currentBuild.result = res
+#                       } else {
+#                         echo "All is well"
+#                       }
+#   Create a custom script with environment variable and shell script logic for not imported items as below  
+        run: |
+          echo hello
+          res=${MAKE_RESULT}
+          if [[ -n $res ]]; then
+            echo "Setting build result $res"
+            exit 1
+          else
+            echo "All is well"
+          fi
+        env:
+          MAKE_RESULT: ${{ env.MAKE_RESULT }}          
+
+
+    - name: snapshot post build job status
+      run: |-
+        echo "aborted=${{ job.status == 'cancelled' }}" >> $GITHUB_OUTPUT
+        echo "failure=${{ job.status == 'failure' }}" >> $GITHUB_OUTPUT
+        echo "success=${{ job.status == 'success' }}" >> $GITHUB_OUTPUT
+        echo "unstable=${{ job.status == 'failure' }}" >> $GITHUB_OUTPUT
+      id: __post_build
+    - name: echo message
+      run: echo Stage is Unstable
+      if: steps.__post_build.outputs.unstable == 'true'
+    - name: echo message
+      run: echo Stage FAILED
+      if: steps.__post_build.outputs.failure == 'true'
+    - name: echo message
+      run: echo Stage 'Hello' WAS ABORTED
+      if: steps.__post_build.outputs.aborted == 'true'
+    - name: echo message
+      run: echo Stage was Successful
+      if: steps.__post_build.outputs.success == 'true'
+    - name: echo message
+      run: echo Stage 'Hello' finished
+      if: always()
+#     # post condition changed not supported
+  Post-Build:
+    if: always()
+    name: Post Build
+    runs-on: ubuntu-latest
+    needs:
+    - Hello
+    steps:
+    - name: echo message
+      run: echo Pipeline is done
+      if: always()
